@@ -38,14 +38,9 @@ class UniversalControllerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                # Simple unique check based on name
                 name = user_input["name"]
                 
-                # Check if already configured by searching existing entries
-                for entry in self._async_current_entries():
-                    if entry.data.get("name") == name:
-                        return self.async_abort(reason="already_configured")
-                
+                # Create entry - allow multiple Universal Controller instances
                 return self.async_create_entry(
                     title=name,
                     data=user_input,

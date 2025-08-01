@@ -12,6 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 FRONTEND_URL_PATH = "/universal_controller_frontend"
 FRONTEND_FILE_PATH = "universal-controller-card.js"
+FRONTEND_EDITOR_PATH = "universal-controller-card-editor.js"
 
 
 async def async_register_frontend(hass: HomeAssistant) -> None:
@@ -29,8 +30,11 @@ async def async_register_frontend(hass: HomeAssistant) -> None:
         
         if www_dir.exists():
             card_file = www_dir / FRONTEND_FILE_PATH
+            editor_file = www_dir / FRONTEND_EDITOR_PATH
             _LOGGER.info(f"📄 Card file: {card_file}")
             _LOGGER.info(f"📄 Card file exists: {card_file.exists()}")
+            _LOGGER.info(f"📄 Editor file: {editor_file}")
+            _LOGGER.info(f"📄 Editor file exists: {editor_file.exists()}")
             
             if card_file.exists():
                 # Register the static files using the correct async method
@@ -48,11 +52,19 @@ async def async_register_frontend(hass: HomeAssistant) -> None:
                     _LOGGER.error(f"❌ Static path registration failed: {static_error}")
                     raise
                 
-                # Add the JS file to frontend
+                # Add both JS files to frontend
                 try:
+                    # Main card
                     frontend_url = f"{FRONTEND_URL_PATH}/{FRONTEND_FILE_PATH}"
                     frontend.add_extra_js_url(hass, frontend_url)
-                    _LOGGER.info(f"🔗 JS URL added to frontend: {frontend_url}")
+                    _LOGGER.info(f"🔗 Main card JS URL added: {frontend_url}")
+                    
+                    # Editor (if exists)
+                    if editor_file.exists():
+                        editor_url = f"{FRONTEND_URL_PATH}/{FRONTEND_EDITOR_PATH}"
+                        frontend.add_extra_js_url(hass, editor_url)
+                        _LOGGER.info(f"🔗 Editor JS URL added: {editor_url}")
+                        
                 except Exception as js_error:
                     _LOGGER.error(f"❌ JS URL registration failed: {js_error}")
                     raise
