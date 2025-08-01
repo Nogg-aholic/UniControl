@@ -30,7 +30,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.info("Setting up Universal Controller entry: %s", entry.entry_id)
     
     # Initialize domain data
-    hass.data.setdefault(DOMAIN, {"entities": []})
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN].setdefault(entry.entry_id, {})
+    
+    # Import required classes
+    from .storage import UniversalControllerStorage
+    from .ticker_manager import TickerManager
+    
+    # Initialize storage and ticker manager
+    storage = UniversalControllerStorage(hass)
+    ticker_manager = TickerManager(hass)
+    
+    # Store instances in domain data
+    hass.data[DOMAIN][entry.entry_id] = {
+        "storage": storage,
+        "ticker_manager": ticker_manager,
+    }
     
     # Register services
     await _async_setup_services(hass)
