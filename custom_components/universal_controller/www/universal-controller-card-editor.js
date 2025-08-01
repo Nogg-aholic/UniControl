@@ -69,7 +69,10 @@ class UniversalControllerCardEditor extends HTMLElement {
 
   populateEntityDropdown() {
     const entitySelect = this.shadowRoot.getElementById('entity');
-    if (!this._hass) return;
+    if (!this._hass || !entitySelect) return;
+
+    // Clear existing options first
+    entitySelect.innerHTML = '<option value="">Select Universal Controller Entity</option>';
 
     // Filter for Universal Controller entities
     const entities = Object.keys(this._hass.states).filter(
@@ -93,3 +96,5 @@ class UniversalControllerCardEditor extends HTMLElement {
 }
 
 customElements.define('universal-controller-card-editor', UniversalControllerCardEditor);
+
+console.info('Universal Controller Card Editor registered successfully');

@@ -620,20 +620,43 @@ class UniversalControllerCardEditor extends HTMLElement {
 
 // Register the elements
 customElements.define('universal-controller-card', UniversalControllerCard);
-customElements.define('universal-controller-card-editor', UniversalControllerCardEditor);
 
-// Add to custom card registry
-window.customCards = window.customCards || [];
-window.customCards.push({
-  type: 'universal-controller-card',
-  name: 'Universal Controller Card',
-  description: 'Display and edit Universal Controller entities with custom HTML/CSS/TypeScript',
-  preview: true,
-  documentationURL: 'https://github.com/your-repo/universal-controller'
-});
+// Enhanced Card Registry for Home Assistant Card Picker
+(function() {
+  // Register with window.customCards for card-picker compatibility
+  if (!window.customCards) {
+    window.customCards = [];
+  }
+  
+  const cardConfig = {
+    type: 'universal-controller-card',
+    name: 'Universal Controller Card',
+    description: 'Display and edit Universal Controller entities with HTML/CSS/TypeScript',
+    preview: true,
+    documentationURL: 'https://github.com/Nogg-aholic/UniControl'
+  };
+  
+  // Add to customCards array
+  window.customCards.push(cardConfig);
+  
+  // Also register with customElements registry check
+  if (window.customElementRegistry && window.customElementRegistry.get) {
+    const element = window.customElementRegistry.get('universal-controller-card');
+    if (element) {
+      console.log('✅ Universal Controller Card: Successfully registered with Home Assistant');
+    }
+  }
+  
+  // Register with card registry event if available
+  setTimeout(() => {
+    if (window.customCardEntry) {
+      window.customCardEntry(cardConfig);
+    }
+  }, 1000);
+})();
 
 console.info(
-  '%c UNIVERSAL-CONTROLLER-CARD %c v2.0.0 ',
+  '%c UNIVERSAL-CONTROLLER-CARD %c v1.2.6 ',
   'color: white; background: #039be5; font-weight: 700;',
   'color: #039be5; background: white; font-weight: 700;'
 );

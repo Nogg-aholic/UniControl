@@ -26,15 +26,13 @@ class TypeScriptExecutionEngine:
             return None
 
         try:
-            # Try to use py-mini-racer for real JavaScript execution
-            result = await self._execute_with_v8(code)
-            return result
-        except ImportError:
-            _LOGGER.warning("py-mini-racer not available, falling back to Python simulation")
+            # Skip py-mini-racer for now due to compatibility issues
+            # Use Python fallback which is more stable
+            _LOGGER.info("Using Python execution fallback for better compatibility")
             return await self._execute_with_python_fallback(code)
         except Exception as err:
-            _LOGGER.error("JavaScript execution error: %s", err)
-            raise RuntimeError(f"JavaScript execution failed: {err}")
+            _LOGGER.error("Code execution error: %s", err)
+            raise RuntimeError(f"Code execution failed: {err}")
 
     async def _execute_with_v8(self, code: str) -> Any:
         """Execute code using V8 JavaScript engine via py-mini-racer."""
