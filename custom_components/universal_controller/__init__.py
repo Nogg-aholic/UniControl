@@ -1,7 +1,7 @@
 """Universal Controller integration setup."""
 from __future__ import annotations
 
-__version__ = "1.2.0"
+__version__ = "1.2.2"
 
 import logging
 from typing import Any
@@ -29,9 +29,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Universal Controller from a config entry."""
     _LOGGER.info("Setting up Universal Controller entry: %s", entry.entry_id)
     
-    # Initialize domain data
+    # Initialize domain data structure
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(entry.entry_id, {})
     
     # Import required classes
     from .storage import UniversalControllerStorage
@@ -41,14 +40,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     storage = UniversalControllerStorage(hass)
     ticker_manager = TickerManager(hass)
     
-    # Store instances in domain data
+    # Store instances in domain data with the correct entry_id
     hass.data[DOMAIN][entry.entry_id] = {
         "storage": storage,
         "ticker_manager": ticker_manager,
     }
     
-    # Register services
-    await _async_setup_services(hass)
+    # Register services only once (not per entry)
+    if not hass.data[DOMAIN].get("services_registered", False):
+        await _async_setup_services(hass)
+        hass.data[DOMAIN]["services_registered"] = True
     
     # Forward setup to platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

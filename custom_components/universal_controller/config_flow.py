@@ -38,12 +38,13 @@ class UniversalControllerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                # Create a unique entry with domain and sanitized name
+                # Simple unique check based on name
                 name = user_input["name"]
-                unique_id = f"{DOMAIN}.{name.lower().replace(' ', '_')}"
                 
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
+                # Check if already configured by searching existing entries
+                for entry in self._async_current_entries():
+                    if entry.data.get("name") == name:
+                        return self.async_abort(reason="already_configured")
                 
                 return self.async_create_entry(
                     title=name,

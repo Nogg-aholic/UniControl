@@ -38,9 +38,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up Universal Controller sensor."""
     # Get the ticker manager and storage from the domain data
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    ticker_manager = data["ticker_manager"]
-    storage = data["storage"]
+    domain_data = hass.data.get(DOMAIN, {})
+    entry_data = domain_data.get(config_entry.entry_id)
+    
+    if not entry_data:
+        _LOGGER.error("No data found for entry %s", config_entry.entry_id)
+        return
+        
+    ticker_manager = entry_data["ticker_manager"]
+    storage = entry_data["storage"]
     
     name = config_entry.data.get("name", "Universal Controller")
     interval = config_entry.data.get("interval", DEFAULT_INTERVAL)
