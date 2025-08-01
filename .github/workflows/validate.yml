@@ -1,0 +1,40 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: HACS validation
+        uses: hacs/action@main
+        with:
+          category: "integration"
+
+      - name: Hassfest validation
+        uses: home-assistant/actions/hassfest@master
+
+      - name: Check version consistency
+        run: |
+          MANIFEST_VERSION=$(grep '"version"' custom_components/universal_controller/manifest.json | cut -d'"' -f4)
+          VERSION_FILE=$(cat VERSION)
+          CONST_VERSION=$(grep 'VERSION = ' custom_components/universal_controller/const.py | cut -d'"' -f2)
+          
+          echo "Manifest version: $MANIFEST_VERSION"
+          echo "VERSION file: $VERSION_FILE"
+          echo "Const version: $CONST_VERSION"
+          
+          if [ "$MANIFEST_VERSION" != "$VERSION_FILE" ] || [ "$MANIFEST_VERSION" != "$CONST_VERSION" ]; then
+            echo "Version mismatch detected!"
+            exit 1
+          fi
+          
+          echo "All versions match: $MANIFEST_VERSION"

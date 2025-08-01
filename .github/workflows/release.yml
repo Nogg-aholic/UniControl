@@ -1,0 +1,65 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create release archive
+        run: |
+          cd custom_components
+          zip -r ../universal_controller-${{ steps.version.outputs.VERSION }}.zip universal_controller/
+          cd ..
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Universal Controller ${{ steps.version.outputs.VERSION }}
+          body: |
+            ## Universal Controller ${{ steps.version.outputs.VERSION }}
+            
+            ### Features
+            - ✅ Real JavaScript/TypeScript execution with py-mini-racer
+            - ✅ Advanced HTML template engine with conditionals and loops
+            - ✅ Custom Lovelace cards with inline editor
+            - ✅ Centralized ticker management system
+            - ✅ HACS compatibility for easy installation
+            
+            ### Installation
+            1. Install via HACS (recommended)
+            2. Download the zip file and extract to `custom_components/universal_controller/`
+            3. Restart Home Assistant
+            4. Add integration through UI
+            
+            ### What's New
+            - Initial stable release
+            - Production-ready with comprehensive error handling
+            - Full documentation and examples included
+            
+            For detailed installation and usage instructions, see the [README](https://github.com/Nogg-aholic/universal-controller/blob/main/README.md).
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./universal_controller-${{ steps.version.outputs.VERSION }}.zip
+          asset_name: universal_controller-${{ steps.version.outputs.VERSION }}.zip
+          asset_content_type: application/zip

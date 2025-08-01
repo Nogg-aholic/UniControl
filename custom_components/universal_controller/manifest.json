@@ -1,13 +1,19 @@
 {
-  "domain": "universal_controller",
-  "name": "Universal Controller",
-  "version": "1.0.0",
-  "integration_type": "helper",
-  "documentation": "https://github.com/Nogg-aholic/universal-controller",
-  "issue_tracker": "https://github.com/Nogg-aholic/universal-controller/issues",
-  "dependencies": [],
-  "codeowners": ["@Nogg-aholic"],
-  "requirements": ["py-mini-racer>=0.6.0"],
-  "config_flow": true,
-  "iot_class": "local_push"
+    "domain":  "universal_controller",
+    "name":  "Universal Controller",
+    "version":  "1.1.0",
+    "integration_type":  "helper",
+    "documentation":  "https://github.com/Nogg-aholic/universal-controller",
+    "issue_tracker":  "https://github.com/Nogg-aholic/universal-controller/issues",
+    "dependencies":  [
+
+                     ],
+    "codeowners":  [
+                       "@Nogg-aholic"
+                   ],
+    "requirements":  [
+                         "py-mini-racer\u003e=0.6.0"
+                     ],
+    "config_flow":  true,
+    "iot_class":  "local_push"
 }
