@@ -35,6 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Import required classes
     from .storage import UniversalControllerStorage
     from .ticker_manager import TickerManager
+    from .frontend import async_register_frontend
     
     # Initialize storage and ticker manager
     storage = UniversalControllerStorage(hass)
@@ -50,6 +51,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not hass.data[DOMAIN].get("services_registered", False):
         await _async_setup_services(hass)
         hass.data[DOMAIN]["services_registered"] = True
+    
+    # Register frontend only once (not per entry)
+    if not hass.data[DOMAIN].get("frontend_registered", False):
+        await async_register_frontend(hass)
+        hass.data[DOMAIN]["frontend_registered"] = True
     
     # Forward setup to platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -178,7 +184,19 @@ async def _async_setup_services(hass: HomeAssistant) -> None:
         else:
             _LOGGER.error("Universal Controller entity %s not found", entity_id)
     
+    async def get_card_configs_service(call: ServiceCall) -> None:
+        """Handle get_card_configs service call."""
+        card_configs = hass.data[DOMAIN].get("card_configs", {})
+        
+        # Return the configurations via event
+        hass.bus.async_fire("universal_controller_card_configs", {
+            "configs": card_configs
+        })
+        
+        _LOGGER.info("Card configurations sent: %s", list(card_configs.keys()))
+    
     # Register services
     hass.services.async_register(DOMAIN, "create_entity", create_entity_service)
     hass.services.async_register(DOMAIN, "update_entity", update_entity_service)
     hass.services.async_register(DOMAIN, "execute_now", execute_now_service)
+    hass.services.async_register(DOMAIN, "get_card_configs", get_card_configs_service)

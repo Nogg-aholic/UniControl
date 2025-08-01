@@ -156,6 +156,9 @@ class UniversalControllerEntity(SensorEntity):
         # Start ticker if interval is set
         if self._interval > 0:
             self._ticker_manager.start_ticker(self._unique_id, self._interval)
+        
+        # Auto-create a dashboard card configuration for this entity
+        await self._auto_create_card_config()
 
     async def async_will_remove_from_hass(self) -> None:
         """When entity will be removed from hass."""
@@ -280,3 +283,26 @@ class UniversalControllerEntity(SensorEntity):
         except Exception as err:
             _LOGGER.error("Template rendering error: %s", err)
             return f"<div class='error'>Template error: {err}</div>"
+
+    async def _auto_create_card_config(self) -> None:
+        """Auto-create a dashboard card configuration for this entity."""
+        try:
+            # Create a card configuration that references this entity
+            card_config = {
+                "type": "custom:universal-controller-card",
+                "name": self._name,
+                "ticker_id": self._unique_id,
+                "entity": self.entity_id,
+                "show_code_editor": True,
+                "update_interval": self._interval * 1000,  # Convert to milliseconds
+                "card_width": "2/4",  # Default to half width
+                "card_height": 3,  # Default height
+            }
+            
+            # Store the card config for the frontend to use
+            self.hass.data[DOMAIN].setdefault("card_configs", {})[self.entity_id] = card_config
+            
+            _LOGGER.info(f"Auto-created card config for entity: {self.entity_id}")
+            
+        except Exception as err:
+            _LOGGER.error(f"Failed to create card config for {self.entity_id}: {err}")

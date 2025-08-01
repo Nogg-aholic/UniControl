@@ -99,3 +99,8 @@ execute_now:
       selector:
         entity:
           domain: sensor
+
+get_card_configs:
+  name: Get Card Configurations
+  description: Retrieve all registered card configurations
+  fields: {}
