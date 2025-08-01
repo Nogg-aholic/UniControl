@@ -1,0 +1,101 @@
+create_entity:
+  name: Create Universal Controller Entity
+  description: Create a new Universal Controller entity dynamically
+  fields:
+    name:
+      name: Entity Name
+      description: Name for the new entity
+      required: true
+      selector:
+        text:
+    entity_id:
+      name: Entity ID
+      description: Custom entity ID (optional, will be auto-generated if not provided)
+      required: false
+      selector:
+        text:
+    interval:
+      name: Execution Interval
+      description: How often to execute the code (in seconds)
+      required: false
+      default: 30
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: "seconds"
+    html_template:
+      name: HTML Template
+      description: Initial HTML template
+      required: false
+      selector:
+        text:
+          multiline: true
+    css_styles:
+      name: CSS Styles
+      description: Initial CSS styles
+      required: false
+      selector:
+        text:
+          multiline: true
+    typescript_code:
+      name: TypeScript Code
+      description: Initial TypeScript/JavaScript code
+      required: false
+      selector:
+        text:
+          multiline: true
+
+update_entity:
+  name: Update Universal Controller Entity
+  description: Update an existing Universal Controller entity configuration
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the Universal Controller to update
+      required: true
+      selector:
+        entity:
+          domain: sensor
+    html_template:
+      name: HTML Template
+      description: HTML template for rendering
+      required: false
+      selector:
+        text:
+          multiline: true
+    css_styles:
+      name: CSS Styles
+      description: CSS styles for the HTML
+      required: false
+      selector:
+        text:
+          multiline: true
+    typescript_code:
+      name: TypeScript Code
+      description: TypeScript/JavaScript code to execute
+      required: false
+      selector:
+        text:
+          multiline: true
+    interval:
+      name: Execution Interval
+      description: How often to execute the code (in seconds)
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: "seconds"
+
+execute_now:
+  name: Execute Universal Controller Now
+  description: Immediately execute the TypeScript code for an entity
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID of the Universal Controller to execute
+      required: true
+      selector:
+        entity:
+          domain: sensor
