@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.6] - 2025-01-27
+
+### CRITICAL FIXES
+- **Multiple Helpers Support**: Removed incorrect uniqueness check that prevented creating multiple Universal Controller helpers
+- **Frontend Registration**: Fixed frontend registration to properly load both main card and editor files
+- **Card Display**: Enhanced frontend registration with better error handling and logging
+
+### Fixed
+- **Config Flow**: Now allows creating multiple Universal Controller instances with different names
+- **Frontend Files**: Properly registers both universal-controller-card.js and universal-controller-card-editor.js
+- **Card Loading**: Cards should now appear correctly in the Lovelace interface
+
+## [1.2.5] - 2025-01-27
+
+### Fixed
+- **Frontend Registration**: Fixed deprecated register_static_path usage - now using async_register_static_paths correctly
+- **Enhanced Error Handling**: Added comprehensive error handling for frontend registration steps
+
 ## [1.2.3] - 2025-01-27
 
 ### Added
