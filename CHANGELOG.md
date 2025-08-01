@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.8] - 2025-08-01
+
+### MAJOR IMPROVEMENTS 🚀
+- **Real JavaScript Execution**: Implemented proper V8 JavaScript engine with py-mini-racer for native JS/TypeScript execution
+- **HACS API Integration**: Full HACS API exposure including repository management, installation, and status functions
+- **Monaco Editor**: Added professional TypeScript editor with syntax highlighting, intellisense, and HA/HACS API stubs
+- **Service Call Bridge**: Implemented proper service call mechanism between JavaScript and Home Assistant
+- **Enhanced Card UI**: Recreated card with improved controls, status display, and Monaco editor integration
+
+### Fixed
+- **Service Calls**: Fixed broken service call implementation - HACS functions now work properly
+- **JavaScript Execution**: Resolved execution context issues and improved error handling
+- **HACS Data Access**: Added robust error handling for HACS data retrieval with safe fallbacks
+- **Card Functionality**: Restored complete card functionality with edit, run, and refresh controls
+- **Math/Date Utilities**: Fixed utility functions that were overriding JavaScript globals
+
+### Enhanced
+- **Error Handling**: Comprehensive error handling throughout the execution engine
+- **Logging**: Improved debugging and logging capabilities
+- **API Stability**: Robust HACS integration that works whether HACS is installed or not
+- **TypeScript Support**: Full TypeScript execution with proper type declarations
+
 ## [1.2.7] - 2025-01-27
 
 ### CRITICAL FIXES ✅
