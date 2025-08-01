@@ -60,15 +60,15 @@ class UniversalControllerCard extends HTMLElement {
                 <div class="card-header">
                     <div class="name">${this._config.title || entity.attributes.friendly_name || this._config.entity}</div>
                     <div class="controls">
-                        <mwc-button dense outlined @click="${() => this._editEntity()}">
+                        <mwc-button dense outlined>
                             <ha-icon icon="mdi:pencil"></ha-icon>
                             Edit
                         </mwc-button>
-                        <mwc-button dense outlined @click="${() => this._executeNow()}">
+                        <mwc-button dense outlined>
                             <ha-icon icon="mdi:play"></ha-icon>
                             Run
                         </mwc-button>
-                        <mwc-button dense outlined @click="${() => this._refreshCard()}">
+                        <mwc-button dense outlined>
                             <ha-icon icon="mdi:refresh"></ha-icon>
                             Refresh
                         </mwc-button>
@@ -195,53 +195,139 @@ class UniversalControllerCard extends HTMLElement {
     }
 
     _attachEventListeners() {
-        // Edit button
-        const editBtn = this.shadowRoot.querySelector('mwc-button[onclick*="editEntity"]');
-        if (editBtn) {
-            editBtn.addEventListener('click', () => this._editEntity());
-        }
-
-        // Run button
-        const runBtn = this.shadowRoot.querySelector('mwc-button[onclick*="executeNow"]');
-        if (runBtn) {
-            runBtn.addEventListener('click', () => this._executeNow());
-        }
-
-        // Refresh button
-        const refreshBtn = this.shadowRoot.querySelector('mwc-button[onclick*="refreshCard"]');
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', () => this._refreshCard());
-        }
+        // Get all buttons with more specific selectors
+        const buttons = this.shadowRoot.querySelectorAll('mwc-button');
+        
+        buttons.forEach(button => {
+            const text = button.textContent || button.innerText || '';
+            if (text.includes('Edit')) {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this._editEntity();
+                });
+            } else if (text.includes('Run')) {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this._executeNow();
+                });
+            } else if (text.includes('Refresh')) {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this._refreshCard();
+                });
+            }
+        });
     }
 
     async _editEntity() {
         if (!this._entity) return;
 
-        // Import and show the Monaco editor
         try {
-            await import('./universal-controller-monaco-editor.js');
+            // Create a simple text editor dialog instead of Monaco
+            const dialog = document.createElement('div');
+            dialog.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
             
-            const editor = document.createElement('universal-controller-monaco-editor');
-            editor.hass = this._hass;
-            editor.entity = this._entity;
-            editor.entityId = this._config.entity;
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                background: var(--card-background-color, white);
+                border-radius: 8px;
+                padding: 24px;
+                width: 90%;
+                max-width: 800px;
+                max-height: 80%;
+                overflow-y: auto;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            `;
             
-            // Create dialog
-            const dialog = document.createElement('ha-dialog');
-            dialog.open = true;
-            dialog.heading = `Edit ${this._entity.attributes.friendly_name || this._config.entity}`;
-            dialog.appendChild(editor);
+            const attributes = this._entity.attributes || {};
             
+            modal.innerHTML = `
+                <h2 style="margin-top: 0;">Edit ${this._entity.attributes.friendly_name || this._config.entity}</h2>
+                
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: bold;">TypeScript Code:</label>
+                    <textarea id="codeEditor" style="width: 100%; height: 200px; font-family: monospace; padding: 8px; border: 1px solid var(--divider-color); border-radius: 4px;">${attributes.typescript_code || ''}</textarea>
+                </div>
+                
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: bold;">HTML Template:</label>
+                    <textarea id="htmlEditor" style="width: 100%; height: 150px; font-family: monospace; padding: 8px; border: 1px solid var(--divider-color); border-radius: 4px;">${attributes.html_template || ''}</textarea>
+                </div>
+                
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: bold;">CSS Styles:</label>
+                    <textarea id="cssEditor" style="width: 100%; height: 100px; font-family: monospace; padding: 8px; border: 1px solid var(--divider-color); border-radius: 4px;">${attributes.css_styles || ''}</textarea>
+                </div>
+                
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: bold;">Execution Interval (seconds):</label>
+                    <input type="number" id="intervalEditor" value="${attributes.interval || 60}" min="1" style="width: 100px; padding: 8px; border: 1px solid var(--divider-color); border-radius: 4px;">
+                </div>
+                
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button id="cancelBtn" style="padding: 8px 16px; border: 1px solid var(--divider-color); background: var(--card-background-color); border-radius: 4px; cursor: pointer;">Cancel</button>
+                    <button id="saveBtn" style="padding: 8px 16px; border: none; background: var(--primary-color); color: white; border-radius: 4px; cursor: pointer;">Save</button>
+                </div>
+            `;
+            
+            dialog.appendChild(modal);
             document.body.appendChild(dialog);
             
-            // Clean up when dialog closes
-            dialog.addEventListener('closed', () => {
+            // Handle save
+            modal.querySelector('#saveBtn').addEventListener('click', async () => {
+                const code = modal.querySelector('#codeEditor').value;
+                const html = modal.querySelector('#htmlEditor').value;
+                const css = modal.querySelector('#cssEditor').value;
+                const interval = parseInt(modal.querySelector('#intervalEditor').value) || 60;
+                
+                try {
+                    await this._hass.callService('universal_controller', 'update_entity', {
+                        entity_id: this._config.entity,
+                        typescript_code: code,
+                        html_template: html,
+                        css_styles: css,
+                        interval: interval
+                    });
+                    
+                    document.body.removeChild(dialog);
+                    this._showToast('Entity updated successfully');
+                    setTimeout(() => this._refreshCard(), 1000);
+                    
+                } catch (error) {
+                    console.error('Failed to update entity:', error);
+                    this._showToast('Update failed: ' + error.message, 'error');
+                }
+            });
+            
+            // Handle cancel
+            modal.querySelector('#cancelBtn').addEventListener('click', () => {
                 document.body.removeChild(dialog);
             });
             
+            // Handle backdrop click
+            dialog.addEventListener('click', (e) => {
+                if (e.target === dialog) {
+                    document.body.removeChild(dialog);
+                }
+            });
+            
         } catch (error) {
-            console.error('Failed to load Monaco editor:', error);
-            alert('Failed to load editor. Check console for details.');
+            console.error('Failed to open editor:', error);
+            this._showToast('Failed to open editor: ' + error.message, 'error');
         }
     }
 

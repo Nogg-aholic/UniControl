@@ -26,203 +26,201 @@ class TypeScriptExecutionEngine:
             return None
 
         try:
-            # Try V8 JavaScript engine first
+            # Try Node.js execution first, then fallback to Python
             try:
-                _LOGGER.debug("Attempting V8 JavaScript execution")
-                return await self._execute_with_v8(code)
-            except ImportError:
-                _LOGGER.warning("py-mini-racer not available, falling back to Python")
+                _LOGGER.debug("Attempting Node.js JavaScript execution")
+                return await self._execute_with_nodejs(code)
+            except (FileNotFoundError, RuntimeError) as nodejs_err:
+                _LOGGER.warning(f"Node.js not available ({nodejs_err}), falling back to Python")
                 return await self._execute_with_python_fallback(code)
         except Exception as err:
             _LOGGER.error("Code execution error: %s", err)
             raise RuntimeError(f"Code execution failed: {err}")
 
-    async def _execute_with_v8(self, code: str) -> Any:
-        """Execute code using V8 JavaScript engine via py-mini-racer."""
+    async def _execute_with_nodejs(self, code: str) -> Any:
+        """Execute code using Node.js JavaScript engine."""
+        import tempfile
+        import subprocess
+        import os
+        
+        # Check if Node.js is available
         try:
-            from py_mini_racer import MiniRacer
-        except ImportError:
-            raise ImportError("py-mini-racer not available")
+            subprocess.run(["node", "--version"], capture_output=True, check=True)
+        except (FileNotFoundError, subprocess.CalledProcessError):
+            raise FileNotFoundError("Node.js not available")
 
-        # Create V8 context
-        ctx = MiniRacer()
-        
-        # Create service call handler
-        service_calls = {}
-        service_call_counter = 0
-        
-        def handle_service_call(domain: str, service: str, data: dict = None):
-            """Handle service calls from JavaScript."""
-            nonlocal service_call_counter
-            call_id = f"service_call_{service_call_counter}"
-            service_call_counter += 1
-            service_calls[call_id] = {
-                "domain": domain,
-                "service": service,
-                "data": data or {}
-            }
-            return f"SERVICE_CALL_QUEUED:{call_id}"
-        
-        # Set up comprehensive Home Assistant and HACS API in JavaScript context
+        # Create comprehensive Home Assistant and HACS API
         hass_api = self._create_comprehensive_hass_api()
         
-        # Inject the APIs into JavaScript with TypeScript-compatible declarations
-        ctx.eval(f"""
-            // Service call queue for async operations
-            const _serviceCalls = {{}};
+        # Create JavaScript wrapper with all APIs
+        js_wrapper = f"""
+const hass = {json.dumps(hass_api, default=str)};
+const states = hass.states;
+
+// Service call queue for async operations
+const _serviceCalls = {{}};
+
+// Service call handler
+function callService(domain, service, data = {{}}) {{
+    const callId = 'call_' + Math.random().toString(36).substr(2, 9);
+    _serviceCalls[callId] = {{ domain, service, data }};
+    return callId;
+}}
+
+hass.callService = callService;
+
+// Enhanced Console API
+const console = {{
+    log: function(...args) {{ 
+        process.stdout.write('_LOG_:' + args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ') + '\\n'); 
+    }},
+    error: function(...args) {{ 
+        process.stderr.write('_ERROR_:' + args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ') + '\\n'); 
+    }},
+    warn: function(...args) {{ 
+        process.stdout.write('_WARN_:' + args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ') + '\\n'); 
+    }},
+    info: function(...args) {{ 
+        process.stdout.write('_INFO_:' + args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ') + '\\n'); 
+    }},
+    debug: function(...args) {{ 
+        process.stdout.write('_DEBUG_:' + args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ') + '\\n'); 
+    }}
+}};
+
+// Date utilities
+const DateUtils = {{
+    now: () => Date.now(),
+    utc: () => new Date().toISOString(),
+    local: () => new Date().toLocaleString(),
+    parse: (str) => new Date(str),
+    format: (date, format) => new Date(date).toLocaleString()
+}};
+
+// Math utilities
+const MathUtils = Object.assign({{}}, Math, {{
+    clamp: (num, min, max) => Math.min(Math.max(num, min), max),
+    randomRange: (min, max) => Math.random() * (max - min) + min,
+    roundTo: (num, decimals) => Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals)
+}});
+
+// HACS Integration API
+const HACS = {{
+    getRepositories: () => hass.hacs_repositories || [],
+    getRepository: (name) => (hass.hacs_repositories || []).find(r => r.name === name),
+    isInstalled: (name) => (hass.hacs_repositories || []).some(r => r.name === name && r.installed),
+    install: (name) => hass.callService('hacs', 'install', {{ repository: name }}),
+    uninstall: (name) => hass.callService('hacs', 'uninstall', {{ repository: name }}),
+    update: (name) => hass.callService('hacs', 'update', {{ repository: name }}),
+    getInfo: () => hass.hacs_info || {{}},
+    getStatus: () => hass.hacs_status || {{}}
+}};
+
+// Enhanced Services API
+const services = {{
+    call: (domain, service, data = {{}}) => {{
+        console.log('Calling service:', domain + '.' + service, data);
+        return hass.callService(domain, service, data);
+    }},
+    turnOn: (entityId, data = {{}}) => services.call('homeassistant', 'turn_on', {{ entity_id: entityId, ...data }}),
+    turnOff: (entityId, data = {{}}) => services.call('homeassistant', 'turn_off', {{ entity_id: entityId, ...data }}),
+    toggle: (entityId, data = {{}}) => services.call('homeassistant', 'toggle', {{ entity_id: entityId, ...data }}),
+    notify: (message, title = null, data = {{}}) => {{
+        const payload = {{ message, ...data }};
+        if (title) payload.title = title;
+        return services.call('notify', 'notify', payload);
+    }},
+    runScript: (scriptId, data = {{}}) => services.call('script', scriptId, data),
+    triggerAutomation: (automationId) => services.call('automation', 'trigger', {{ entity_id: automationId }})
+}};
+
+// Utility functions
+const utils = {{
+    getEntity: (entityId) => states[entityId],
+    getEntityState: (entityId) => states[entityId]?.state,
+    getEntityAttribute: (entityId, attr) => states[entityId]?.attributes[attr],
+    filterEntities: (domain) => Object.keys(states).filter(id => id.startsWith(domain + '.')),
+    getEntitiesByDomain: (domain) => Object.fromEntries(
+        Object.entries(states).filter(([id]) => id.startsWith(domain + '.'))
+    ),
+    isOn: (entityId) => ['on', 'open', 'active', 'playing'].includes(states[entityId]?.state),
+    isOff: (entityId) => ['off', 'closed', 'inactive', 'paused', 'stopped'].includes(states[entityId]?.state),
+    now: () => new Date().toISOString(),
+    timestamp: () => Math.floor(Date.now() / 1000),
+    parseNumber: (value) => parseFloat(value) || 0,
+    parseBoolean: (value) => Boolean(value) && value !== 'false' && value !== 'off',
+    sum: (arr) => arr.reduce((a, b) => a + b, 0),
+    avg: (arr) => arr.length ? utils.sum(arr) / arr.length : 0,
+    min: (arr) => Math.min(...arr),
+    max: (arr) => Math.max(...arr)
+}};
+
+// User code execution
+try {{
+    const result = (function() {{
+        {code}
+    }})();
+    
+    // Output result and service calls
+    console.log('_RESULT_:' + JSON.stringify({{
+        result: result,
+        serviceCalls: _serviceCalls
+    }}));
+}} catch (error) {{
+    console.error('_USER_CODE_ERROR_:' + error.message);
+    process.exit(1);
+}}
+"""
+
+        # Create temporary file
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.js', delete=False) as temp_file:
+            temp_file.write(js_wrapper)
+            temp_file_path = temp_file.name
+
+        try:
+            # Execute with Node.js
+            process = await asyncio.create_subprocess_exec(
+                'node', temp_file_path,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
             
-            // Service call handler
-            function callService(domain, service, data = {{}}) {{
-                const callId = 'call_' + Math.random().toString(36).substr(2, 9);
-                _serviceCalls[callId] = {{ domain, service, data }};
-                return callId;
-            }}
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(),
+                timeout=self._timeout
+            )
             
-            // Home Assistant API
-            const hass = {json.dumps(hass_api, default=str)};
-            hass.callService = callService;
-            const states = hass.states;
+            # Parse output
+            stdout_text = stdout.decode() if stdout else ""
+            stderr_text = stderr.decode() if stderr else ""
             
-            // Enhanced Console API
-            const console = {{
-                log: function(...args) {{ 
-                    return '_LOG_:' + args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '); 
-                }},
-                error: function(...args) {{ 
-                    return '_ERROR_:' + args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '); 
-                }},
-                warn: function(...args) {{ 
-                    return '_WARN_:' + args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '); 
-                }},
-                info: function(...args) {{ 
-                    return '_INFO_:' + args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '); 
-                }},
-                debug: function(...args) {{ 
-                    return '_DEBUG_:' + args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '); 
-                }}
-            }};
+            # Process logs and find result
+            result_data = None
+            service_calls = {}
             
-            // Date utilities (don't override global Date)
-            const DateUtils = {{
-                now: () => Date.now(),
-                utc: () => new Date().toISOString(),
-                local: () => new Date().toLocaleString(),
-                parse: (str) => new Date(str),
-                format: (date, format) => new Date(date).toLocaleString()
-            }};
+            for line in stdout_text.split('\\n'):
+                if line.startswith('_RESULT_:'):
+                    try:
+                        result_json = json.loads(line[9:])
+                        result_data = result_json.get('result')
+                        service_calls = result_json.get('serviceCalls', {})
+                    except json.JSONDecodeError:
+                        pass
+                elif line.startswith('_LOG_:'):
+                    _LOGGER.info("User code: %s", line[5:])
+                elif line.startswith('_ERROR_:'):
+                    _LOGGER.error("User code: %s", line[7:])
+                elif line.startswith('_WARN_:'):
+                    _LOGGER.warning("User code: %s", line[6:])
             
-            // Math utilities (extend existing Math, don't replace)
-            const MathUtils = Object.assign({{}}, Math, {{
-                clamp: (num, min, max) => Math.min(Math.max(num, min), max),
-                randomRange: (min, max) => Math.random() * (max - min) + min,
-                roundTo: (num, decimals) => Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals)
-            }});
+            # Check for errors
+            if process.returncode != 0:
+                error_msg = stderr_text
+                if '_USER_CODE_ERROR_:' in stderr_text:
+                    error_msg = stderr_text.split('_USER_CODE_ERROR_:')[1].strip()
+                raise RuntimeError(f"JavaScript execution error: {error_msg}")
             
-            // HACS Integration API
-            const HACS = {{
-                // Repository management
-                getRepositories: () => hass.hacs_repositories || [],
-                getRepository: (name) => (hass.hacs_repositories || []).find(r => r.name === name),
-                isInstalled: (name) => (hass.hacs_repositories || []).some(r => r.name === name && r.installed),
-                
-                // Installation management (returns call IDs for async processing)
-                install: (name) => hass.callService('hacs', 'install', {{ repository: name }}),
-                uninstall: (name) => hass.callService('hacs', 'uninstall', {{ repository: name }}),
-                update: (name) => hass.callService('hacs', 'update', {{ repository: name }}),
-                
-                // Information
-                getInfo: () => hass.hacs_info || {{}},
-                getStatus: () => hass.hacs_status || {{}}
-            }};
-            
-            // Enhanced Services API
-            const services = {{
-                call: (domain, service, data = {{}}) => {{
-                    console.log('Calling service:', domain + '.' + service, data);
-                    return hass.callService(domain, service, data);
-                }},
-                
-                // Convenience methods for common services
-                turnOn: (entityId, data = {{}}) => services.call('homeassistant', 'turn_on', {{ entity_id: entityId, ...data }}),
-                turnOff: (entityId, data = {{}}) => services.call('homeassistant', 'turn_off', {{ entity_id: entityId, ...data }}),
-                toggle: (entityId, data = {{}}) => services.call('homeassistant', 'toggle', {{ entity_id: entityId, ...data }}),
-                
-                // Notification services
-                notify: (message, title = null, data = {{}}) => {{
-                    const payload = {{ message, ...data }};
-                    if (title) payload.title = title;
-                    return services.call('notify', 'notify', payload);
-                }},
-                
-                // Script and automation
-                runScript: (scriptId, data = {{}}) => services.call('script', scriptId, data),
-                triggerAutomation: (automationId) => services.call('automation', 'trigger', {{ entity_id: automationId }})
-            }};
-            
-            // Utility functions
-            const utils = {{
-                // Entity helpers
-                getEntity: (entityId) => states[entityId],
-                getEntityState: (entityId) => states[entityId]?.state,
-                getEntityAttribute: (entityId, attr) => states[entityId]?.attributes[attr],
-                
-                // Filtering helpers
-                filterEntities: (domain) => Object.keys(states).filter(id => id.startsWith(domain + '.')),
-                getEntitiesByDomain: (domain) => Object.fromEntries(
-                    Object.entries(states).filter(([id]) => id.startsWith(domain + '.'))
-                ),
-                
-                // State helpers
-                isOn: (entityId) => ['on', 'open', 'active', 'playing'].includes(states[entityId]?.state),
-                isOff: (entityId) => ['off', 'closed', 'inactive', 'paused', 'stopped'].includes(states[entityId]?.state),
-                
-                // Time helpers
-                now: () => new Date().toISOString(),
-                timestamp: () => Math.floor(Date.now() / 1000),
-                
-                // Data processing
-                parseNumber: (value) => parseFloat(value) || 0,
-                parseBoolean: (value) => Boolean(value) && value !== 'false' && value !== 'off',
-                
-                // Array helpers
-                sum: (arr) => arr.reduce((a, b) => a + b, 0),
-                avg: (arr) => arr.length ? utils.sum(arr) / arr.length : 0,
-                min: (arr) => Math.min(...arr),
-                max: (arr) => Math.max(...arr)
-            }};
-        """)
-        
-        # Wrap user code in an async function for better error handling
-        wrapped_code = f"""
-        (function() {{
-            try {{
-                const result = (function() {{
-                    {code}
-                }})();
-                
-                // Return both the result and any queued service calls
-                return {{
-                    result: result,
-                    serviceCalls: _serviceCalls
-                }};
-            }} catch (error) {{
-                console.error('User code error:', error.message);
-                throw new Error('User code error: ' + error.message);
-            }}
-        }})();
-        """
-        
-        # Execute with timeout
-        execution_result = await asyncio.wait_for(
-            asyncio.get_event_loop().run_in_executor(
-                None, lambda: ctx.eval(wrapped_code)
-            ),
-            timeout=self._timeout
-        )
-        
-        # Process any service calls that were queued
-        if isinstance(execution_result, dict) and "serviceCalls" in execution_result:
-            service_calls = execution_result.get("serviceCalls", {})
+            # Process service calls
             for call_id, call_data in service_calls.items():
                 try:
                     await self.hass.services.async_call(
@@ -234,9 +232,14 @@ class TypeScriptExecutionEngine:
                 except Exception as err:
                     _LOGGER.error(f"Service call {call_id} failed: {err}")
             
-            return execution_result.get("result")
-        
-        return execution_result
+            return result_data
+            
+        finally:
+            # Clean up temp file
+            try:
+                os.unlink(temp_file_path)
+            except OSError:
+                pass
 
     async def _execute_with_python_fallback(self, code: str) -> Any:
         """Fallback Python execution for basic JavaScript-like code."""
