@@ -2,7 +2,7 @@
 
 DOMAIN = "universal_controller"
 PLATFORMS = ["sensor"]
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 
 # Default values
 DEFAULT_INTERVAL = 30  # seconds
