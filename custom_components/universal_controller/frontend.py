@@ -5,6 +5,7 @@ import logging
 from pathlib import Path
 
 from homeassistant.components import frontend
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,18 +33,29 @@ async def async_register_frontend(hass: HomeAssistant) -> None:
             _LOGGER.info(f"📄 Card file exists: {card_file.exists()}")
             
             if card_file.exists():
-                # Register the static files
-                hass.http.register_static_path(
-                    FRONTEND_URL_PATH, 
-                    str(www_dir), 
-                    cache_headers=False
-                )
-                _LOGGER.info(f"📁 Static path registered: {FRONTEND_URL_PATH} -> {www_dir}")
+                # Register the static files using the correct async method
+                _LOGGER.info("🔧 Registering static paths using async_register_static_paths")
+                try:
+                    await hass.http.async_register_static_paths([
+                        StaticPathConfig(
+                            url_path=FRONTEND_URL_PATH,
+                            path=str(www_dir),
+                            cache_headers=False
+                        )
+                    ])
+                    _LOGGER.info(f"📁 Static path registered: {FRONTEND_URL_PATH} -> {www_dir}")
+                except Exception as static_error:
+                    _LOGGER.error(f"❌ Static path registration failed: {static_error}")
+                    raise
                 
                 # Add the JS file to frontend
-                frontend_url = f"{FRONTEND_URL_PATH}/{FRONTEND_FILE_PATH}"
-                frontend.add_extra_js_url(hass, frontend_url)
-                _LOGGER.info(f"🔗 JS URL added to frontend: {frontend_url}")
+                try:
+                    frontend_url = f"{FRONTEND_URL_PATH}/{FRONTEND_FILE_PATH}"
+                    frontend.add_extra_js_url(hass, frontend_url)
+                    _LOGGER.info(f"🔗 JS URL added to frontend: {frontend_url}")
+                except Exception as js_error:
+                    _LOGGER.error(f"❌ JS URL registration failed: {js_error}")
+                    raise
                 
                 _LOGGER.info(f"✅ FRONTEND REGISTRATION COMPLETE")
                 _LOGGER.info(f"🎯 CARD TYPE: 'custom:universal-controller-card'")

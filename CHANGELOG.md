@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - 2025-01-27
+
+### Added
+- **Automatic Card Registration**: Each Universal Controller entity now automatically creates its own dashboard card configuration
+- **Card Configuration Service**: New `get_card_configs` service to retrieve all registered card configurations
+- **Frontend Registration System**: Comprehensive frontend registration with proper static file serving
+- **Enhanced Entity Integration**: Cards are automatically created when entities are added to Home Assistant
+
+### Fixed
+- **Frontend Initialization**: Fixed frontend registration in async_setup_entry
+- **Card Creation Logic**: Implemented automatic card creation during entity lifecycle
+- **Service Registration**: Enhanced service registration with proper error handling
+
 ## [1.0.0] - 2025-08-01
 
 ### Added
