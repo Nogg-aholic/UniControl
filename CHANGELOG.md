@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.7] - 2025-01-27
+
+### CRITICAL FIXES ✅
+- **Card Picker Integration**: Fixed card registration so Universal Controller Card now appears in Home Assistant's card picker
+- **Editor JavaScript Errors**: Fixed `appendChild entitySelect is null` error in card editor
+- **JavaScript Execution**: Disabled problematic py-mini-racer, using stable Python fallback execution
+- **Enhanced Card Registry**: Improved card registration for better Home Assistant compatibility
+
+### Fixed
+- **Frontend Registration**: Card editor now loads without JavaScript errors
+- **Card Selection**: Cards can now be added through the visual card picker interface
+- **Config Validation**: Resolved card configuration save issues
+- **Execution Engine**: Stable code execution without relocation errors
+
 ## [1.2.6] - 2025-01-27
 
 ### CRITICAL FIXES
