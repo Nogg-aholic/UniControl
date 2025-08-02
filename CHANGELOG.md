@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.3] - 2025-08-02
+
+### Fixed
+- **S6 Overlay**: Fixed "s6-overlay-suexec: fatal: can only run as pid 1" error
+- **Container Startup**: Added proper ENTRYPOINT ["/init"] for S6 overlay initialization  
+- **Service Management**: Added finish script for proper service shutdown handling
+- **File Permissions**: Set executable permissions for S6 service scripts
+
+### Technical
+- S6 overlay now properly runs as PID 1 in container
+- Proper service lifecycle management with finish script
+- Executable permissions set for run and finish scripts
+
+---
+
+## [1.4.2] - 2025-08-02
+
+### Fixed
+- **Docker Build**: Fixed npm ci error by generating package-lock.json and using npm install
+- **Dockerfile**: Added default BUILD_FROM argument to resolve invalid base image warning
+- **Build Process**: Changed from `npm ci --only=production` to `npm install --omit=dev`
+- **Build Context**: Added .dockerignore to optimize build performance
+
+### Technical
+- Generated package-lock.json for reliable dependency installation
+- Added default base image fallback in Dockerfile
+- Improved build optimization with proper .dockerignore
+
+---
+
 ## [1.4.1] - 2025-08-02
 
 ### Fixed

@@ -13,6 +13,10 @@ RUN \
 # Copy root filesystem
 COPY rootfs /
 
+# Set permissions for S6 scripts
+RUN chmod a+x /etc/services.d/universal-controller/run \
+    && chmod a+x /etc/services.d/universal-controller/finish
+
 # Install Node.js dependencies
 WORKDIR /app
 RUN npm install --omit=dev
@@ -45,3 +49,6 @@ LABEL \
     org.opencontainers.image.created=${BUILD_DATE} \
     org.opencontainers.image.revision=${BUILD_REF} \
     org.opencontainers.image.version=${BUILD_VERSION}
+
+# S6 overlay entrypoint
+ENTRYPOINT ["/init"]

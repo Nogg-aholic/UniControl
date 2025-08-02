@@ -1,6 +1,6 @@
 {
   "name": "@universal_controller/addon-build",
-  "version": "1.4.1",
+  "version": "1.4.3",
   "description": "Universal Controller Home Assistant Add-on build tools",
   "scripts": {
     "build": "docker build -t universal-controller-test .",
