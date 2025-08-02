@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.7] - 2025-08-02
+
+### Fixed
+- **Socket.IO Loading**: Fixed "io is not defined" error by adding proper async loading check
+- **Initialization**: Added waitForSocketIO() function to ensure Socket.IO loads before use
+- **Error Handling**: Better error messages and retry logic for external script loading
+- **Status Display**: Updated version number in status bar to reflect current version
+
 ## [1.4.6] - 2025-08-02
 
 ### Added
