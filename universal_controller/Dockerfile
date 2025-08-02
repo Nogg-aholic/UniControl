@@ -1,4 +1,4 @@
-ARG BUILD_FROM
+ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:15.0.7
 FROM $BUILD_FROM
 
 # Set shell
@@ -15,7 +15,7 @@ COPY rootfs /
 
 # Install Node.js dependencies
 WORKDIR /app
-RUN npm ci --only=production
+RUN npm install --omit=dev
 
 # Build arguments
 ARG BUILD_ARCH

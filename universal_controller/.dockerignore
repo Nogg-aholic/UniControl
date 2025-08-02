@@ -1,0 +1,7 @@
+rootfs/app/node_modules
+rootfs/app/.npm
+rootfs/app/npm-debug.log*
+.git
+.gitignore
+README.md
+*.md
