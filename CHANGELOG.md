@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.5] - 2025-08-02
+
+### Fixed
+- **S6 Overlay Error**: Completely removed S6 overlay and switched to simple Home Assistant add-on pattern
+- **Container Initialization**: Added `init: false` in config.yaml as required by HA documentation  
+- **Dockerfile**: Simplified to use `ARG BUILD_FROM` and `FROM $BUILD_FROM` with basic `CMD [ "/run.sh" ]`
+- **Startup Script**: Created proper `run.sh` with `#!/usr/bin/with-contenv bashio` following HA standards
+
 ## [1.4.4] - 2025-08-02
 
 ### Changed

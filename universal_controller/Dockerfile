@@ -1,54 +1,24 @@
-ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:15.0.7
+ARG BUILD_FROM
 FROM $BUILD_FROM
 
-# Set shell
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
 # Install Node.js and npm
-RUN \
-    apk add --no-cache \
-        nodejs=~20 \
-        npm=~10
+RUN apk add --no-cache \
+    nodejs \
+    npm
 
-# Copy root filesystem
-COPY rootfs /
+# Set working directory
+WORKDIR /
 
-# Set permissions for S6 scripts
-RUN chmod a+x /etc/services.d/universal-controller/run \
-    && chmod a+x /etc/services.d/universal-controller/finish
-
-# Install Node.js dependencies
+# Copy package.json and install dependencies
+COPY rootfs/app/package*.json ./app/
 WORKDIR /app
-RUN npm install --omit=dev
+RUN npm ci --production
 
-# Build arguments
-ARG BUILD_ARCH
-ARG BUILD_DATE
-ARG BUILD_DESCRIPTION
-ARG BUILD_NAME
-ARG BUILD_REF
-ARG BUILD_REPOSITORY
-ARG BUILD_VERSION
+# Copy application files
+COPY rootfs/app/ ./
 
-# Labels
-LABEL \
-    io.hass.name="${BUILD_NAME}" \
-    io.hass.description="${BUILD_DESCRIPTION}" \
-    io.hass.arch="${BUILD_ARCH}" \
-    io.hass.type="addon" \
-    io.hass.version=${BUILD_VERSION} \
-    maintainer="Nogg-aholic" \
-    org.opencontainers.image.title="${BUILD_NAME}" \
-    org.opencontainers.image.description="${BUILD_DESCRIPTION}" \
-    org.opencontainers.image.vendor="Home Assistant Community Add-ons" \
-    org.opencontainers.image.authors="Nogg-aholic" \
-    org.opencontainers.image.licenses="MIT" \
-    org.opencontainers.image.url="https://github.com/Nogg-aholic/UniControl" \
-    org.opencontainers.image.source="https://github.com/Nogg-aholic/UniControl" \
-    org.opencontainers.image.documentation="https://github.com/Nogg-aholic/UniControl/blob/main/README.md" \
-    org.opencontainers.image.created=${BUILD_DATE} \
-    org.opencontainers.image.revision=${BUILD_REF} \
-    org.opencontainers.image.version=${BUILD_VERSION}
+# Copy run script
+COPY run.sh /
+RUN chmod a+x /run.sh
 
-# S6 overlay entrypoint
-ENTRYPOINT ["/init"]
+CMD [ "/run.sh" ]

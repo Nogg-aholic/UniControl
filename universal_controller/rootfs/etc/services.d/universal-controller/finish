@@ -1,7 +1,0 @@
-#!/usr/bin/execlineb -S0
-
-# Properly handle service shutdown
-if { s6-test $# -ne 0 }
-if { s6-test ${1} -eq 256 }
-
-s6-svscanctl -t /var/run/s6/services
