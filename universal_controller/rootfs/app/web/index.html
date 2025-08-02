@@ -234,6 +234,31 @@
             border-color: #0e639c;
         }
 
+        .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            background: #1e1e1e;
+            border: 1px solid #3e3e42;
+            border-radius: 4px;
+            color: white;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .form-group select:focus {
+            outline: none;
+            border-color: #0e639c;
+        }
+
+        .btn.small {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        .entity-dropdown {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        }
+
         .modal-actions {
             display: flex;
             gap: 12px;
@@ -293,6 +318,13 @@
                         <div class="form-group">
                             <label>Entity Name</label>
                             <input type="text" id="entity-name" placeholder="Enter entity name">
+                        </div>
+                        <div class="form-group">
+                            <label>Home Assistant Entity Selector</label>
+                            <select id="ha-entity-selector" class="entity-dropdown">
+                                <option value="">Select an entity...</option>
+                            </select>
+                            <button class="btn small" onclick="insertSelectedEntity()">Insert Entity ID</button>
                         </div>
                         <div class="form-group">
                             <label>Execution Interval (seconds)</label>
@@ -359,6 +391,9 @@
 
                 // Load entities
                 await loadEntities();
+
+                // Load Home Assistant entities for dropdown
+                await loadHomeAssistantEntities();
 
                 updateStatus('Ready');
                 console.log('Universal Controller initialized');
@@ -766,6 +801,63 @@ declare const entity: { id: string; name: string; state: string };
         async function refreshEntities() {
             await loadEntities();
             updateStatus('Entities refreshed');
+        }
+
+        // Load Home Assistant entities into dropdown
+        async function loadHomeAssistantEntities() {
+            try {
+                const response = await fetch('/api/hass/states');
+                if (response.ok) {
+                    const states = await response.json();
+                    const dropdown = document.getElementById('ha-entity-selector');
+                    
+                    // Clear existing options (except first one)
+                    dropdown.innerHTML = '<option value="">Select an entity...</option>';
+                    
+                    // Sort entities by entity_id
+                    const sortedStates = states.sort((a, b) => a.entity_id.localeCompare(b.entity_id));
+                    
+                    // Add entities to dropdown
+                    sortedStates.forEach(state => {
+                        const option = document.createElement('option');
+                        option.value = state.entity_id;
+                        option.textContent = `${state.entity_id} (${state.attributes.friendly_name || state.entity_id})`;
+                        dropdown.appendChild(option);
+                    });
+                    
+                    updateStatus(`Loaded ${sortedStates.length} Home Assistant entities`);
+                } else {
+                    throw new Error('Failed to load Home Assistant entities');
+                }
+            } catch (error) {
+                console.error('Failed to load HA entities:', error);
+                updateStatus('Failed to load HA entities: ' + error.message, 'error');
+            }
+        }
+
+        // Insert selected entity ID into the JavaScript editor
+        function insertSelectedEntity() {
+            const dropdown = document.getElementById('ha-entity-selector');
+            const selectedEntityId = dropdown.value;
+            
+            if (!selectedEntityId) {
+                updateStatus('Please select an entity first', 'error');
+                return;
+            }
+            
+            if (editors.javascript) {
+                const editor = editors.javascript;
+                const position = editor.getPosition();
+                const range = new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column);
+                
+                // Insert the entity ID as a string
+                const entityIdText = `'${selectedEntityId}'`;
+                editor.executeEdits('insert-entity', [{ range, text: entityIdText }]);
+                
+                // Focus back to editor
+                editor.focus();
+                updateStatus(`Inserted entity ID: ${selectedEntityId}`);
+            }
         }
 
         function updateStatus(message, type = 'info') {

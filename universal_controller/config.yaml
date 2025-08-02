@@ -1,5 +1,5 @@
 name: Universal Controller
-version: "1.4.5"
+version: "1.4.6"
 slug: universal_controller
 description: Execute JavaScript/TypeScript code in Home Assistant with Monaco Editor
 url: https://github.com/Nogg-aholic/UniControl

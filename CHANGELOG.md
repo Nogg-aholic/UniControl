@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.6] - 2025-08-02
+
+### Added
+- **Entity Selector Dropdown**: Added dropdown in Settings tab that loads all Home Assistant entities sorted by name
+- **Insert Entity Button**: Button to insert selected entity ID directly into Monaco Editor
+- **Entity Loading**: Automatic loading of HA entities on startup with friendly names display
+- **Entity Search**: Dropdown shows entity_id with friendly_name for easy identification
+
+### Enhanced
+- **Monaco Editor Integration**: Selected entities are inserted as quoted strings in JavaScript editor
+- **User Experience**: Status updates show when entities are loaded and inserted
+- **UI**: Proper styling for dropdown and small button in Settings panel
+
 ## [1.4.5] - 2025-08-02
 
 ### Fixed
