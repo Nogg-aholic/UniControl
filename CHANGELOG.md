@@ -5,6 +5,54 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2025-08-02
+
+### 🎉 Major Architecture Overhaul - HACS Integration → Home Assistant Add-on
+
+### Added
+- **Complete Add-on Implementation**: Restructured from HACS integration to proper Home Assistant Add-on
+- **Real JavaScript Execution**: Full Node.js runtime environment replacing Python transpilation
+- **Monaco Editor Integration**: Professional VS Code editor experience with TypeScript IntelliSense
+- **WebSocket Real-time Communication**: Live updates between editor and execution engine
+- **Docker Container Environment**: Secure Alpine Linux container with Node.js 20
+- **S6 Service Management**: Proper add-on lifecycle management
+- **Bashio Integration**: Configuration parsing and Home Assistant Supervisor communication
+- **Build Infrastructure**: PowerShell and Bash build scripts for cross-platform development
+- **Configuration Validation**: JSON schema validation for add-on configuration
+- **Automated Testing**: Test suite for server functionality and API endpoints
+- **Professional Web Interface**: Multi-tab editor with syntax highlighting for JS/HTML/CSS
+
+### Changed
+- **Execution Engine**: Migrated from py-mini-racer Python execution to native Node.js
+- **Frontend**: Replaced basic textarea editors with Monaco Editor
+- **Communication**: Switched from HTTP polling to WebSocket real-time updates
+- **Installation Method**: Changed from HACS integration to Home Assistant Add-on
+- **Configuration**: Moved from integration config flow to add-on options
+- **Storage**: Enhanced entity persistence with JSON file storage
+- **API Access**: Direct Home Assistant Supervisor API integration
+
+### Improved
+- **Performance**: Significant improvement with native JavaScript execution
+- **Developer Experience**: Professional coding environment with autocomplete and error detection
+- **Debugging**: Better error handling and execution result reporting
+- **Security**: Container isolation and proper execution sandboxing
+- **Maintainability**: Clean separation of concerns and modular architecture
+
+### Technical Details
+- **Container**: Alpine Linux 3.18 with Node.js 20.x
+- **Dependencies**: Express, Socket.IO, node-cron, Lodash, Moment.js, Axios
+- **Ports**: Web interface on port 8099 with Home Assistant ingress support
+- **Storage**: JSON-based entity persistence in /data directory
+- **APIs**: Full Home Assistant state and service access via Supervisor
+
+### Migration Notes
+- **Breaking Change**: Complete migration from HACS integration to add-on
+- **Installation**: Remove old HACS integration, install new add-on
+- **Configuration**: Re-create entities in new add-on interface
+- **Benefits**: Significant improvement in functionality and user experience
+
+---
+
 ## [1.2.8] - 2025-08-01
 
 ### MAJOR IMPROVEMENTS 🚀

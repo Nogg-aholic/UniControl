@@ -1,0 +1,27 @@
+{
+  "name": "universal-controller-addon",
+  "version": "1.4.0",
+  "description": "Universal Controller Add-on for Home Assistant",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.4",
+    "ws": "^8.14.2",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.4",
+    "axios": "^1.6.2",
+    "node-cron": "^3.0.3"
+  },
+  "keywords": [
+    "homeassistant",
+    "addon",
+    "javascript",
+    "typescript",
+    "automation"
+  ],
+  "author": "Nogg-aholic",
+  "license": "MIT"
+}

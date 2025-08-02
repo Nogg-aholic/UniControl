@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Controller</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1e1e1e;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #2d2d30;
+            padding: 16px 24px;
+            border-bottom: 1px solid #3e3e42;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background: #1177bb;
+        }
+
+        .btn.secondary {
+            background: #3c3c3c;
+        }
+
+        .btn.secondary:hover {
+            background: #4c4c4c;
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 73px);
+        }
+
+        .sidebar {
+            width: 300px;
+            background: #252526;
+            border-right: 1px solid #3e3e42;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid #3e3e42;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .entity-list {
+            padding: 8px;
+        }
+
+        .entity-item {
+            padding: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .entity-item:hover {
+            background: #2a2d2e;
+        }
+
+        .entity-item.active {
+            background: #094771;
+        }
+
+        .entity-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .entity-status {
+            font-size: 12px;
+            color: #cccccc;
+        }
+
+        .editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-tabs {
+            background: #2d2d30;
+            border-bottom: 1px solid #3e3e42;
+            display: flex;
+            padding: 0 16px;
+        }
+
+        .editor-tab {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-size: 14px;
+        }
+
+        .editor-tab.active {
+            border-bottom-color: #0e639c;
+            background: #1e1e1e;
+        }
+
+        .editor-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-toolbar {
+            background: #2d2d30;
+            padding: 8px 16px;
+            border-bottom: 1px solid #3e3e42;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .monaco-container {
+            flex: 1;
+            position: relative;
+        }
+
+        .editor-panel {
+            height: 100%;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .status-bar {
+            background: #007acc;
+            color: white;
+            padding: 4px 16px;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #2d2d30;
+            border-radius: 8px;
+            padding: 24px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .modal h3 {
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            background: #1e1e1e;
+            border: 1px solid #3e3e42;
+            border-radius: 4px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #0e639c;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .settings-panel {
+            padding: 20px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Universal Controller</h1>
+        <div class="header-actions">
+            <button class="btn" onclick="createEntity()">New Entity</button>
+            <button class="btn secondary" onclick="refreshEntities()">Refresh</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h3>Entities</h3>
+                <span id="entity-count">0</span>
+            </div>
+            <div class="entity-list" id="entity-list">
+                <!-- Entities will be loaded here -->
+            </div>
+        </div>
+
+        <div class="editor-container">
+            <div class="editor-tabs">
+                <div class="editor-tab active" data-tab="javascript">JavaScript</div>
+                <div class="editor-tab" data-tab="html">HTML</div>
+                <div class="editor-tab" data-tab="css">CSS</div>
+                <div class="editor-tab" data-tab="settings">Settings</div>
+            </div>
+
+            <div class="editor-content">
+                <div class="editor-toolbar">
+                    <button class="btn" onclick="executeEntity()" id="execute-btn" disabled>Execute</button>
+                    <button class="btn secondary" onclick="saveEntity()" id="save-btn" disabled>Save</button>
+                    <button class="btn secondary" onclick="deleteEntity()" id="delete-btn" disabled>Delete</button>
+                    <div style="margin-left: auto;">
+                        <span id="entity-status">No entity selected</span>
+                    </div>
+                </div>
+
+                <div class="monaco-container">
+                    <div id="javascript-editor" class="editor-panel"></div>
+                    <div id="html-editor" class="editor-panel hidden"></div>
+                    <div id="css-editor" class="editor-panel hidden"></div>
+                    <div id="settings-panel" class="editor-panel hidden settings-panel">
+                        <div class="form-group">
+                            <label>Entity Name</label>
+                            <input type="text" id="entity-name" placeholder="Enter entity name">
+                        </div>
+                        <div class="form-group">
+                            <label>Execution Interval (seconds)</label>
+                            <input type="number" id="entity-interval" min="1" value="60">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="entity-enabled" checked> Enabled
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="status-bar">
+                    <span id="status-left">Loading Monaco Editor...</span>
+                    <span id="status-right">Universal Controller v1.4.0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Entity Modal -->
+    <div class="modal" id="new-entity-modal">
+        <div class="modal-content">
+            <h3>Create New Entity</h3>
+            <div class="form-group">
+                <label>Entity ID</label>
+                <input type="text" id="new-entity-id" placeholder="e.g., my_automation">
+            </div>
+            <div class="form-group">
+                <label>Entity Name</label>
+                <input type="text" id="new-entity-name" placeholder="e.g., My Automation">
+            </div>
+            <div class="modal-actions">
+                <button class="btn secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn" onclick="confirmCreateEntity()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Monaco Editor and Socket.IO -->
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    
+    <script>
+        // Global state
+        let socket;
+        let entities = new Map();
+        let currentEntity = null;
+        let editors = {};
+        let monacoLoaded = false;
+
+        // Initialize the application
+        async function init() {
+            try {
+                updateStatus('Initializing...');
+                
+                // Connect to WebSocket
+                socket = io();
+                setupSocketHandlers();
+
+                // Load Monaco Editor
+                await loadMonacoEditor();
+
+                // Load entities
+                await loadEntities();
+
+                updateStatus('Ready');
+                console.log('Universal Controller initialized');
+                
+            } catch (error) {
+                console.error('Initialization failed:', error);
+                updateStatus('Initialization failed: ' + error.message);
+            }
+        }
+
+        function setupSocketHandlers() {
+            socket.on('connect', () => {
+                console.log('Connected to server');
+                updateStatus('Connected');
+            });
+
+            socket.on('disconnect', () => {
+                console.log('Disconnected from server');
+                updateStatus('Disconnected');
+            });
+
+            socket.on('entities', (entityList) => {
+                entities.clear();
+                entityList.forEach(entity => {
+                    entities.set(entity.id, entity);
+                });
+                renderEntityList();
+            });
+
+            socket.on('entity_updated', (entity) => {
+                entities.set(entity.id, entity);
+                renderEntityList();
+                if (currentEntity && currentEntity.id === entity.id) {
+                    loadEntityIntoEditor(entity);
+                }
+            });
+
+            socket.on('entity_executed', (data) => {
+                const entity = entities.get(data.id);
+                if (entity) {
+                    Object.assign(entity, data.entity);
+                    entities.set(entity.id, entity);
+                    renderEntityList();
+                    updateStatus(`Executed ${entity.name} in ${data.result.executionTime}`);
+                }
+            });
+
+            socket.on('execution_error', (data) => {
+                updateStatus(`Execution failed: ${data.error}`, 'error');
+            });
+        }
+
+        async function loadMonacoEditor() {
+            return new Promise((resolve) => {
+                require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs' } });
+                
+                require(['vs/editor/editor.main'], () => {
+                    // Configure TypeScript compiler options
+                    monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+                        target: monaco.languages.typescript.ScriptTarget.ES2020,
+                        allowNonTsExtensions: true,
+                        moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+                        module: monaco.languages.typescript.ModuleKind.CommonJS,
+                        noEmit: true,
+                        esModuleInterop: true,
+                        allowJs: true
+                    });
+
+                    // Add Home Assistant type definitions
+                    const hassTypes = `
+declare interface HassState {
+    entity_id: string;
+    state: string;
+    attributes: Record<string, any>;
+    last_changed: string;
+    last_updated: string;
+}
+
+declare interface HassAPI {
+    states: Record<string, HassState>;
+    callService(domain: string, service: string, data?: any): Promise<any>;
+    getState(entityId: string): HassState | null;
+    setState(entityId: string, state: string, attributes?: any): Promise<any>;
+}
+
+declare const hass: HassAPI;
+declare const log: (...args: any[]) => void;
+declare const error: (...args: any[]) => void;
+declare const _: any; // Lodash
+declare const moment: any;
+declare const axios: any;
+declare const entity: { id: string; name: string; state: string };
+                    `;
+
+                    monaco.languages.typescript.javascriptDefaults.addExtraLib(
+                        hassTypes,
+                        'file:///hass.d.ts'
+                    );
+
+                    // Create editors
+                    editors.javascript = monaco.editor.create(document.getElementById('javascript-editor'), {
+                        language: 'javascript',
+                        theme: 'vs-dark',
+                        automaticLayout: true,
+                        minimap: { enabled: false },
+                        fontSize: 14,
+                        tabSize: 2,
+                        insertSpaces: true,
+                        wordWrap: 'on',
+                        value: '// Write your JavaScript code here\n// You have access to: hass, log, error, _, moment, axios, entity\n\n'
+                    });
+
+                    editors.html = monaco.editor.create(document.getElementById('html-editor'), {
+                        language: 'html',
+                        theme: 'vs-dark',
+                        automaticLayout: true,
+                        minimap: { enabled: false },
+                        fontSize: 14,
+                        tabSize: 2,
+                        insertSpaces: true,
+                        wordWrap: 'on',
+                        value: '<!-- HTML template -->\n<div>\n  <h3>My Entity</h3>\n  <p>State: {{state}}</p>\n</div>'
+                    });
+
+                    editors.css = monaco.editor.create(document.getElementById('css-editor'), {
+                        language: 'css',
+                        theme: 'vs-dark',
+                        automaticLayout: true,
+                        minimap: { enabled: false },
+                        fontSize: 14,
+                        tabSize: 2,
+                        insertSpaces: true,
+                        wordWrap: 'on',
+                        value: '/* CSS styles */\ndiv {\n  padding: 16px;\n  border-radius: 8px;\n  background: var(--card-background-color);\n}'
+                    });
+
+                    // Setup tab switching
+                    setupTabSwitching();
+
+                    monacoLoaded = true;
+                    updateStatus('Monaco Editor loaded');
+                    resolve();
+                });
+            });
+        }
+
+        function setupTabSwitching() {
+            const tabs = document.querySelectorAll('.editor-tab');
+            const panels = document.querySelectorAll('.editor-panel');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.dataset.tab;
+                    
+                    // Update active tab
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    // Show corresponding panel
+                    panels.forEach(panel => {
+                        panel.classList.add('hidden');
+                    });
+
+                    const targetPanel = document.getElementById(`${tabName}-editor`) || 
+                                       document.getElementById(`${tabName}-panel`);
+                    if (targetPanel) {
+                        targetPanel.classList.remove('hidden');
+                    }
+
+                    // Layout editor if it's a Monaco editor
+                    if (editors[tabName]) {
+                        setTimeout(() => editors[tabName].layout(), 100);
+                    }
+                });
+            });
+        }
+
+        async function loadEntities() {
+            try {
+                const response = await fetch('/api/entities');
+                const entityList = await response.json();
+                
+                entities.clear();
+                entityList.forEach(entity => {
+                    entities.set(entity.id, entity);
+                });
+                
+                renderEntityList();
+                updateStatus(`Loaded ${entities.size} entities`);
+                
+            } catch (error) {
+                console.error('Failed to load entities:', error);
+                updateStatus('Failed to load entities: ' + error.message, 'error');
+            }
+        }
+
+        function renderEntityList() {
+            const listElement = document.getElementById('entity-list');
+            const countElement = document.getElementById('entity-count');
+            
+            listElement.innerHTML = '';
+            countElement.textContent = entities.size;
+
+            entities.forEach(entity => {
+                const item = document.createElement('div');
+                item.className = 'entity-item';
+                if (currentEntity && currentEntity.id === entity.id) {
+                    item.classList.add('active');
+                }
+                
+                item.innerHTML = `
+                    <div class="entity-name">${entity.name}</div>
+                    <div class="entity-status">
+                        ${entity.state} • Last: ${entity.last_execution ? new Date(entity.last_execution).toLocaleTimeString() : 'Never'}
+                        ${entity.last_error ? `<br>Error: ${entity.last_error}` : ''}
+                    </div>
+                `;
+                
+                item.addEventListener('click', () => selectEntity(entity.id));
+                listElement.appendChild(item);
+            });
+        }
+
+        function selectEntity(entityId) {
+            const entity = entities.get(entityId);
+            if (!entity) return;
+
+            currentEntity = entity;
+            loadEntityIntoEditor(entity);
+            renderEntityList(); // Update active state
+            
+            // Enable buttons
+            document.getElementById('execute-btn').disabled = false;
+            document.getElementById('save-btn').disabled = false;
+            document.getElementById('delete-btn').disabled = false;
+            
+            updateStatus(`Selected: ${entity.name}`);
+        }
+
+        function loadEntityIntoEditor(entity) {
+            if (!monacoLoaded) return;
+
+            // Load code into editors
+            editors.javascript.setValue(entity.javascript_code || '// Write your JavaScript code here\n// You have access to: hass, log, error, _, moment, axios, entity\n\n');
+            editors.html.setValue(entity.html_template || '<!-- HTML template -->\n<div>\n  <h3>My Entity</h3>\n  <p>State: {{state}}</p>\n</div>');
+            editors.css.setValue(entity.css_styles || '/* CSS styles */\ndiv {\n  padding: 16px;\n  border-radius: 8px;\n  background: var(--card-background-color);\n}');
+
+            // Load settings
+            document.getElementById('entity-name').value = entity.name || '';
+            document.getElementById('entity-interval').value = entity.interval || 60;
+            document.getElementById('entity-enabled').checked = entity.enabled !== false;
+
+            // Update status
+            document.getElementById('entity-status').textContent = 
+                `${entity.name} • ${entity.state} • Interval: ${entity.interval}s`;
+        }
+
+        async function saveEntity() {
+            if (!currentEntity) return;
+
+            try {
+                const data = {
+                    name: document.getElementById('entity-name').value,
+                    javascript_code: editors.javascript.getValue(),
+                    html_template: editors.html.getValue(),
+                    css_styles: editors.css.getValue(),
+                    interval: parseInt(document.getElementById('entity-interval').value) || 60,
+                    enabled: document.getElementById('entity-enabled').checked
+                };
+
+                const response = await fetch(`/api/entities/${currentEntity.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    const updatedEntity = await response.json();
+                    entities.set(updatedEntity.id, updatedEntity);
+                    currentEntity = updatedEntity;
+                    renderEntityList();
+                    updateStatus('Entity saved successfully');
+                } else {
+                    throw new Error('Failed to save entity');
+                }
+
+            } catch (error) {
+                console.error('Save failed:', error);
+                updateStatus('Save failed: ' + error.message, 'error');
+            }
+        }
+
+        async function executeEntity() {
+            if (!currentEntity) return;
+
+            try {
+                updateStatus(`Executing ${currentEntity.name}...`);
+                
+                const response = await fetch(`/api/entities/${currentEntity.id}/execute`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    updateStatus(`Executed successfully in ${result.executionTime}`);
+                } else {
+                    throw new Error('Execution failed');
+                }
+
+            } catch (error) {
+                console.error('Execution failed:', error);
+                updateStatus('Execution failed: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteEntity() {
+            if (!currentEntity) return;
+
+            if (!confirm(`Are you sure you want to delete "${currentEntity.name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/entities/${currentEntity.id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    entities.delete(currentEntity.id);
+                    currentEntity = null;
+                    renderEntityList();
+                    
+                    // Clear editor
+                    if (monacoLoaded) {
+                        editors.javascript.setValue('// Write your JavaScript code here\n// You have access to: hass, log, error, _, moment, axios, entity\n\n');
+                        editors.html.setValue('<!-- HTML template -->\n<div>\n  <h3>My Entity</h3>\n  <p>State: {{state}}</p>\n</div>');
+                        editors.css.setValue('/* CSS styles */\ndiv {\n  padding: 16px;\n  border-radius: 8px;\n  background: var(--card-background-color);\n}');
+                    }
+                    
+                    // Disable buttons
+                    document.getElementById('execute-btn').disabled = true;
+                    document.getElementById('save-btn').disabled = true;
+                    document.getElementById('delete-btn').disabled = true;
+                    
+                    updateStatus('Entity deleted');
+                } else {
+                    throw new Error('Failed to delete entity');
+                }
+
+            } catch (error) {
+                console.error('Delete failed:', error);
+                updateStatus('Delete failed: ' + error.message, 'error');
+            }
+        }
+
+        function createEntity() {
+            document.getElementById('new-entity-modal').style.display = 'flex';
+            document.getElementById('new-entity-id').focus();
+        }
+
+        function closeModal() {
+            document.getElementById('new-entity-modal').style.display = 'none';
+            document.getElementById('new-entity-id').value = '';
+            document.getElementById('new-entity-name').value = '';
+        }
+
+        async function confirmCreateEntity() {
+            const id = document.getElementById('new-entity-id').value.trim();
+            const name = document.getElementById('new-entity-name').value.trim();
+
+            if (!id || !name) {
+                alert('Please enter both ID and name');
+                return;
+            }
+
+            if (entities.has(id)) {
+                alert('Entity with this ID already exists');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/entities', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, name })
+                });
+
+                if (response.ok) {
+                    const entity = await response.json();
+                    entities.set(entity.id, entity);
+                    renderEntityList();
+                    selectEntity(entity.id);
+                    closeModal();
+                    updateStatus(`Created entity: ${entity.name}`);
+                } else {
+                    throw new Error('Failed to create entity');
+                }
+
+            } catch (error) {
+                console.error('Create failed:', error);
+                updateStatus('Create failed: ' + error.message, 'error');
+            }
+        }
+
+        async function refreshEntities() {
+            await loadEntities();
+            updateStatus('Entities refreshed');
+        }
+
+        function updateStatus(message, type = 'info') {
+            const statusElement = document.getElementById('status-left');
+            statusElement.textContent = message;
+            
+            if (type === 'error') {
+                statusElement.style.color = '#f48771';
+            } else {
+                statusElement.style.color = '#ffffff';
+            }
+        }
+
+        // Handle modal clicks
+        document.getElementById('new-entity-modal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                closeModal();
+            }
+        });
+
+        // Handle keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key) {
+                    case 's':
+                        e.preventDefault();
+                        if (currentEntity) saveEntity();
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        if (currentEntity) executeEntity();
+                        break;
+                    case 'n':
+                        e.preventDefault();
+                        createEntity();
+                        break;
+                }
+            }
+        });
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
