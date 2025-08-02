@@ -1,14 +1,12 @@
 name: Universal Controller
-version: "1.4.0"
+version: "1.4.1"
 slug: universal_controller
 description: Execute JavaScript/TypeScript code in Home Assistant with Monaco Editor
 url: https://github.com/Nogg-aholic/UniControl
 arch:
-  - armhf
-  - armv7
   - aarch64
   - amd64
-  - i386
+  - armv7
 startup: services
 boot: auto
 ports:
@@ -31,4 +29,3 @@ schema:
   ssl: bool
   certfile: str?
   keyfile: str?
-image: ghcr.io/nogg-aholic/{arch}-addon-universal-controller

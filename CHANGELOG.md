@@ -5,9 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2025-08-02
+
+### Fixed
+- **Add-on Installation**: Removed pre-built image reference causing 403 errors, now builds from source
+- **Architecture Support**: Optimized for aarch64, amd64, and armv7 architectures  
+- **Build Configuration**: Added proper build.yaml for Home Assistant add-on building
+- **Docker Registry**: Fixed "denied" errors by removing non-existent ghcr.io image references
+
+### Technical
+- Add-on now builds locally from Dockerfile instead of pulling from registry
+- Supports building on Home Assistant Supervisor for all major architectures
+- Uses official Home Assistant base images for stability
+
+---
+
 ## [1.4.0] - 2025-08-02
 
 ### 🎉 Major Architecture Overhaul - HACS Integration → Home Assistant Add-on
+
+### Fixed (Post-Release)
+- **Add-on Installation**: Removed pre-built image reference causing 403 errors, now builds from source
+- **Architecture Support**: Optimized for aarch64, amd64, and armv7 architectures
+- **Build Configuration**: Added proper build.yaml for Home Assistant add-on building
 
 ### Added
 - **Complete Add-on Implementation**: Restructured from HACS integration to proper Home Assistant Add-on

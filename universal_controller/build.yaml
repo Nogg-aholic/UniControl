@@ -1,0 +1,12 @@
+build_from:
+  aarch64: ghcr.io/hassio-addons/base/aarch64:15.0.7
+  amd64: ghcr.io/hassio-addons/base/amd64:15.0.7
+  armv7: ghcr.io/hassio-addons/base/armv7:15.0.7
+labels:
+  org.opencontainers.image.title: "Universal Controller"
+  org.opencontainers.image.description: "Execute JavaScript/TypeScript code in Home Assistant with Monaco Editor"
+  org.opencontainers.image.source: "https://github.com/Nogg-aholic/UniControl"
+  org.opencontainers.image.authors: "Nogg-aholic"
+  org.opencontainers.image.licenses: "MIT"
+args:
+  TEMPIO_VERSION: "2021.09.0"
